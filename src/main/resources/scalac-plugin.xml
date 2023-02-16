@@ -1,0 +1,4 @@
+<plugin>
+  <name>disableToString</name>
+  <classname>bl.DisableToStringPlugin</classname>
+</plugin>
