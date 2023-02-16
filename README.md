@@ -48,3 +48,14 @@ val test3 = List(1, 2).mkString(",")
                  Use `cats.Foldable[List].mkString_` instead of `List[Int].mkString`
                  or convert elements to `String`s before calling `mkString` */
 ```
+
+The plugin encourages use of `cats.Show`, but also works with `scalaz.Show`. All of the cases above are allowed
+within `Show` instances so code like this will compile without warnings:
+
+```scala
+new cats.Show[Int] { def show(i: Int) = i.toString }
+cats.Show.show((i: Int) => i.toString)
+
+new scalaz.Show[Int] { def show(i: Int) = scalaz.Cord(i.toString) }
+scalaz.Show.show((i: Int) => i.toString)
+```
