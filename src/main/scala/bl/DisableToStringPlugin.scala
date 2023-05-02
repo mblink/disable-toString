@@ -79,7 +79,8 @@ class DisableToStringPlugin(override val global: Global) extends Plugin { self =
     case x => widenType(x)
   }
 
-  private def normalizeType(t: Type): Type = widenType(dealiasType(t))
+  private def normalizeType(tpe: Type): Type =
+    Option(tpe).fold[Type](NoType)(t => widenType(dealiasType(t)))
 
   private lazy val catsShow = "cats.Show"
   private lazy val scalaz = "scalaz"
@@ -95,6 +96,7 @@ class DisableToStringPlugin(override val global: Global) extends Plugin { self =
 
   private def isStringOrShown(tpe: Type): (Boolean, Type) =
     tpe match {
+      case null => (false, NoType)
       case t if t =:= STRING_TPE => (true, t)
       case _ => normalizeType(tpe).pipe(t => (STRING_TPES.exists(t <:< _), t))
     }
@@ -107,13 +109,7 @@ class DisableToStringPlugin(override val global: Global) extends Plugin { self =
       isStringOrShown(tree).pipe { case (b, t) => if (b) Some(t) else None }
   }
 
-  // private object NotStringOrShownType {
-  //   def unapply(tree: Tree): Option[Type] =
-  //     isStringOrShown(tree).pipe { case (b, t) => if (b) None else Some(t) }
-  // }
-
   private object IterableOnceType {
-
     def unapply(tree: Tree): Option[Type] =
       normalizeType(tree.tpe) match {
         case t @ TypeRef(_, _, List(tpe)) if t.typeConstructor <:< ITERABLE_ONCE_TPE => Some(tpe)
@@ -148,7 +144,7 @@ class DisableToStringPlugin(override val global: Global) extends Plugin { self =
   private def checkTree(tree: Tree): Unit =
     tree match {
       // Disallow calls to `.toString` on disabled types
-      case Select(t @ /*NotStringOrShownType*/DisabledType(tpe), TermName("toString")) =>
+      case Select(t @ DisabledType(tpe), TermName("toString")) =>
         runReporting.warning(
           t.pos,
           s"Use a ${code("cats.Show")} instance instead of ${code(s"$tpe.toString")}",
@@ -158,7 +154,7 @@ class DisableToStringPlugin(override val global: Global) extends Plugin { self =
       // Disallow string concatenation of disabled types
       case Apply(Select(lhs @ StringOrShownType(_), TermName("$plus")), rhss) =>
         rhss.collect {
-          case t @ /*NotStringOrShownType*/DisabledType(tpe) => runReporting.warning(
+          case t @ DisabledType(tpe) => runReporting.warning(
             t.pos,
             s"Only strings can be concatenated. Consider defining a ${code(s"$catsShow[$tpe]")} " ++
               s"and using ${code("""show"..."""")} from ${code("cats.syntax.show._")}",
