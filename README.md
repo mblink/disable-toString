@@ -10,7 +10,7 @@ Add the resolver and compiler plugin dependency to your `build.sbt`:
 
 ```scala
 resolvers += "bondlink-maven-repo" at "https://raw.githubusercontent.com/mblink/maven-repo/main"
-addCompilerPlugin("bondlink" %% "disable-to-string-plugin" % "0.1.0")
+addCompilerPlugin("bondlink" %% "disable-to-string-plugin" % "0.1.1")
 ```
 
 ## Configure
