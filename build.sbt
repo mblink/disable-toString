@@ -1,7 +1,7 @@
 Global / onChangedBuildSource := ReloadOnSourceChanges
 
 val baseSettings = Seq(
-  scalaVersion := "2.13.10",
+  scalaVersion := "2.13.11",
   organization := "bondlink",
   version := "0.1.1",
   gitPublishDir := file("/src/maven-repo"),
