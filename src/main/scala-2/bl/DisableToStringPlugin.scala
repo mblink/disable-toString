@@ -5,13 +5,40 @@ import scala.tools.nsc.{Global, Phase}
 import scala.tools.nsc.plugins.{Plugin, PluginComponent}
 import scala.tools.nsc.Reporting.WarningCategory
 import scala.util.Try
-import scala.util.chaining._
 
-class DisableToStringPlugin(override val global: Global) extends Plugin with BaseDisableToStringPlugin { self =>
-  import global.{Try => _, _}
+class DisableToStringPlugin(override val global: Global) extends Plugin { self =>
+  import global.{NoType => _, Try => _, _}
 
   val name = "disableToString"
   val description = "Warns when calling `.toString` or interpolating a non-String value"
+
+  private object helper extends DisableToStringPluginHelper[Tree, Type, DummyImplicit] {
+    val NoType = global.NoType
+
+    def treeType(tree: Tree): Type = tree.tpe
+
+    def fullTypeName(tpe: Type)(implicit ev: DummyImplicit): String = tpe.typeSymbol.fullName
+
+    def eqTypes(a: Type, b: Type)(implicit ev: DummyImplicit): Boolean = a =:= b
+    def subTypeOf(a: Type, b: Type)(implicit ev: DummyImplicit): Boolean = a <:< b
+
+    @tailrec def dealiasType(t: Type)(implicit ev: DummyImplicit): Type = t.dealias match {
+      case x if x == t => x
+      case x => dealiasType(x)
+    }
+
+    @tailrec def widenType(t: Type)(implicit ev: DummyImplicit): Type = t.widen match {
+      case x if x == t => x
+      case x => widenType(x)
+    }
+
+    def stringType(implicit ev: DummyImplicit): Type = global.typeOf[String]
+
+    def optionalType(name: String)(implicit ev: DummyImplicit): Option[Type] =
+      Try(global.rootMirror.staticClass(name).toType).toOption
+  }
+
+  import helper._
 
   override def init(opts: List[String], error: String => Unit): Boolean = {
     parseOpts(opts, error)
@@ -33,41 +60,7 @@ class DisableToStringPlugin(override val global: Global) extends Plugin with Bas
   protected def debug(name: String, tree: Tree, pretty: Boolean = true): Unit =
     println(debugStr(name, tree, pretty))
 
-  @tailrec private def dealiasType(t: Type): Type = t.dealias match {
-    case x if x == t => x
-    case x => dealiasType(x)
-  }
-
-  @tailrec private def widenType(t: Type): Type = t.widen match {
-    case x if x == t => x
-    case x => widenType(x)
-  }
-
-  private def normalizeType(tpe: Type): Type =
-    Option(tpe).fold[Type](NoType)(t => widenType(dealiasType(t)))
-
-  private lazy val STRING_TPE: Type = global.typeOf[String]
-  private lazy val STRING_TPES: Set[Type] =
-    (Set(STRING_TPE) ++
-      Try(global.rootMirror.staticClass(s"$catsShow.Shown").toType).toOption ++
-      Try(global.rootMirror.staticClass(s"$scalaz.Cord").toType).toOption)
-
   private lazy val ITERABLE_ONCE_TPE = typeOf[IterableOnce[Unit]].typeConstructor
-
-  private def isStringOrShown(tpe: Type): (Boolean, Type) =
-    tpe match {
-      case null => (false, NoType)
-      case t if t =:= STRING_TPE => (true, t)
-      case _ => normalizeType(tpe).pipe(t => (STRING_TPES.exists(t <:< _), t))
-    }
-
-  private def isStringOrShown(tree: Tree): (Boolean, Type) =
-    isStringOrShown(tree.tpe)
-
-  private object StringOrShownType {
-    def unapply(tree: Tree): Option[Type] =
-      isStringOrShown(tree).pipe { case (b, t) => if (b) Some(t) else None }
-  }
 
   private object IterableOnceType {
     def unapply(tree: Tree): Option[Type] =
@@ -75,16 +68,6 @@ class DisableToStringPlugin(override val global: Global) extends Plugin with Bas
         case t @ TypeRef(_, _, List(tpe)) if t.typeConstructor <:< ITERABLE_ONCE_TPE => Some(tpe)
         case _ => None
       }
-  }
-
-  private object DisabledType {
-    def unapply(tpe: Type): Option[Type] = {
-      val (stringOrShown, trueType) = isStringOrShown(tpe)
-      val tpeName = trueType.typeSymbol.fullName
-      if (!stringOrShown && configuredTypes.exists(_.findFirstIn(tpeName).nonEmpty)) Some(trueType) else None
-    }
-
-    def unapply(tree: Tree): Option[Type] = unapply(tree.tpe)
   }
 
   private lazy val CATS_SHOW_TPE: Option[ClassSymbol] = Try(global.rootMirror.staticClass(catsShow)).toOption

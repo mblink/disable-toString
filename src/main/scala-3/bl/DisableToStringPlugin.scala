@@ -4,48 +4,53 @@ import dotty.tools.dotc.ast.tpd.*
 import dotty.tools.dotc.core.{Flags, Symbols}
 import dotty.tools.dotc.core.Contexts.Context
 import dotty.tools.dotc.core.Names.{Name, termName, TermName}
-import dotty.tools.dotc.core.Types.{AppliedType, NoType, Type}
+import dotty.tools.dotc.core.Types.{AppliedType, Type}
 import dotty.tools.dotc.plugins.{PluginPhase, StandardPlugin}
 import dotty.tools.dotc.report
 import dotty.tools.dotc.transform.MegaPhase
 import scala.annotation.tailrec
-import scala.util.chaining.*
 
-class DisableToStringPlugin extends StandardPlugin with BaseDisableToStringPlugin { self =>
+class DisableToStringPlugin extends StandardPlugin { self =>
   val name = "disableToString"
   val description = "Warns when calling `.toString` or interpolating a non-String value"
+
+  private object helper extends DisableToStringPluginHelper[Tree, Type, Context] {
+    val NoType = dotty.tools.dotc.core.Types.NoType
+
+    def treeType(tree: Tree): Type = tree.tpe
+
+    def fullTypeName(tpe: Type)(implicit ev: Context): String = tpe.typeSymbol.fullName.toString
+
+    def eqTypes(a: Type, b: Type)(implicit ev: Context): Boolean = a =:= b
+    def subTypeOf(a: Type, b: Type)(implicit ev: Context): Boolean = a <:< b
+
+    @tailrec def dealiasType(t: Type)(using ev: Context): Type = t.dealias match {
+      case x if x == t => x
+      case x => dealiasType(x)
+    }
+
+    @tailrec def widenType(t: Type)(using ev: Context): Type = t.widen match {
+      case x if x == t => x
+      case x => widenType(x)
+    }
+
+    def stringType(implicit ev: Context): Type = Symbols.requiredClassRef("java.lang.String")
+
+    def optionalClassSymbol(name: String)(using Context): Option[Symbols.ClassSymbol] =
+      Symbols.getClassIfDefined(name) match {
+        case sym: Symbols.ClassSymbol => Some(sym)
+        case _ => None
+      }
+
+    def optionalType(name: String)(implicit ev: Context): Option[Type] = optionalClassSymbol(name).map(_.typeRef)
+  }
+
+  import helper.*
 
   override def init(opts: List[String]): List[PluginPhase] = {
     parseOpts(opts, System.err.println(_))
     List(phase)
   }
-
-  @tailrec private def dealiasType(t: Type)(using Context): Type = t.dealias match {
-    case x if x == t => x
-    case x => dealiasType(x)
-  }
-
-  @tailrec private def widenType(t: Type)(using Context): Type = t.widen match {
-    case x if x == t => x
-    case x => widenType(x)
-  }
-
-  private def normalizeType(tpe: Type)(using Context): Type =
-    Option(tpe).fold[Type](NoType)(t => widenType(dealiasType(t)))
-
-  private def stringType(using Context): Type = Symbols.requiredClassRef("java.lang.String")
-
-  private def optionalClassSymbol(name: String)(using Context): Option[Symbols.ClassSymbol] =
-    Symbols.getClassIfDefined(name) match {
-      case sym: Symbols.ClassSymbol => Some(sym)
-      case _ => None
-    }
-
-  private def optionalType(name: String)(using Context): Option[Type] =
-    optionalClassSymbol(name).map(_.typeRef)
-
-  private def stringTypes(using Context): Set[Type] =
-    Set(stringType) ++ optionalType(s"$catsShow.Shown") ++ optionalType(s"$scalaz.Cord")
 
   private def anyType(using Context): Type =
     Symbols.requiredClassRef("scala.Any")
@@ -53,37 +58,12 @@ class DisableToStringPlugin extends StandardPlugin with BaseDisableToStringPlugi
   private def iterableType(using Context): Type =
     AppliedType(Symbols.requiredClassRef("scala.collection.Iterable"), List(anyType))
 
-  private def isStringOrShown(tpe: Type)(using Context): (Boolean, Type) =
-    tpe match {
-      case null => (false, NoType)
-      case t if t =:= stringType => (true, t)
-      case _ => normalizeType(tpe).pipe(t => (stringTypes.exists(t <:< _), t))
-    }
-
-  private def isStringOrShown(tree: Tree)(using Context): (Boolean, Type) =
-    isStringOrShown(tree.tpe)
-
-  private object StringOrShownType {
-    def unapply(tree: Tree)(using Context): Option[Type] =
-      isStringOrShown(tree).pipe { case (b, t) => if (b) Some(t) else None }
-  }
-
   private object IterableOnceType {
     def unapply(tree: Tree)(using Context): Option[(Type, Type)] =
       normalizeType(tree.tpe) match {
         case AppliedType(t, List(a)) if AppliedType(t, List(anyType)) <:< iterableType => Some((t, a))
         case _ => None
       }
-  }
-
-  private object DisabledType {
-    def unapply(tpe: Type)(using Context): Option[Type] = {
-      val (stringOrShown, trueType) = isStringOrShown(tpe)
-      val tpeName = trueType.typeSymbol.fullName.toString
-      if (!stringOrShown && configuredTypes.exists(_.findFirstIn(tpeName).nonEmpty)) Some(trueType) else None
-    }
-
-    def unapply(tree: Tree)(using Context): Option[Type] = unapply(tree.tpe)
   }
 
   private def catsShowType(using Context): Option[Symbols.ClassSymbol] = optionalClassSymbol(catsShow)
@@ -166,7 +146,6 @@ class DisableToStringPlugin extends StandardPlugin with BaseDisableToStringPlugi
             t
 
           case t =>
-            // println(s"****************\n${iterableOnceType}\n******************")
             super.transformTree(t, start)
         }
       }
