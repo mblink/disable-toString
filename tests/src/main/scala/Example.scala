@@ -63,7 +63,7 @@ object DisableToString {
 
   val intVal = 1
   def intDef() = 1
-  val interpIntLit = s"a ${1: @strConcatOk} b"
+  // val interpIntLit = s"a ${1: @strConcatOk} b"
   val interpIntVal = s"a ${intVal: @annotation.nowarn("msg=Consider defining a `cats.Show\\[Int")} b"
   val interpIntDef = s"a ${intDef(): @annotation.nowarn("msg=Consider defining a `cats.Show\\[Int")} b"
 

@@ -6,51 +6,17 @@ import scala.tools.nsc.plugins.{Plugin, PluginComponent}
 import scala.tools.nsc.Reporting.WarningCategory
 import scala.util.Try
 import scala.util.chaining._
-import scala.util.matching.Regex
 
-class DisableToStringPlugin(override val global: Global) extends Plugin { self =>
+class DisableToStringPlugin(override val global: Global) extends Plugin with BaseDisableToStringPlugin { self =>
   import global.{Try => _, _}
 
-  val name: String = "disableToString"
-  val description: String = "Warns when calling `.toString` or interpolating a non-String value"
-
-  @volatile var configuredTypes = Set.empty[Regex]
+  val name = "disableToString"
+  val description = "Warns when calling `.toString` or interpolating a non-String value"
 
   override def init(opts: List[String], error: String => Unit): Boolean = {
-    opts.foreach(opt => opt.split(':').toList match {
-      case "all" :: Nil => self.synchronized { configuredTypes = configuredTypes + ".*".r }
-      case s"literal=$s" :: Nil => self.synchronized { configuredTypes = configuredTypes + ("\\Q" ++ s ++ "\\E").r }
-      case s"regex=$s" :: Nil => self.synchronized { configuredTypes = configuredTypes + s.r }
-      case _ => error(s"disableToString: invalid option `$opt`")
-    })
-
+    parseOpts(opts, error)
     true
   }
-
-  private case class PrettyPrinter(level: Int, inQuotes: Boolean, backslashed: Boolean) {
-    val indent = List.fill(level)("  ").mkString
-
-    def transform(char: Char): (PrettyPrinter, String) = {
-      val woSlash = copy(backslashed = false)
-      val (pp, f): (PrettyPrinter, PrettyPrinter => String) = char match {
-        case '"' if inQuotes && !backslashed => (woSlash.copy(inQuotes = false), _ => s"$char")
-        case '"' if !inQuotes => (woSlash.copy(inQuotes = true), _ => s"$char")
-        case '\\' if inQuotes && !backslashed => (copy(backslashed = true), _ => s"$char")
-
-        case ',' if !inQuotes => (woSlash, p => s",\n${p.indent}")
-        case '(' if !inQuotes => (woSlash.copy(level = level + 1), p => s"(\n${p.indent}")
-        case ')' if !inQuotes => (woSlash.copy(level = level - 1), p => s"\n${p.indent})")
-        case _ => (woSlash, _ => s"$char")
-      }
-      (pp, f(pp))
-    }
-  }
-
-  private def prettyPrint(raw: String): String =
-    raw.foldLeft((PrettyPrinter(0, false, false), new StringBuilder(""))) { case ((pp, sb), char) =>
-      val (newPP, res) = pp.transform(char)
-      (newPP, sb.append(res))
-    }._2.toString.replaceAll("""\(\s+\)""", "()")
 
   private def showTree(tree: Tree, pretty: Boolean): String =
     if (pretty) prettyPrint(showRaw(tree)) else showRaw(tree)
@@ -67,8 +33,6 @@ class DisableToStringPlugin(override val global: Global) extends Plugin { self =
   protected def debug(name: String, tree: Tree, pretty: Boolean = true): Unit =
     println(debugStr(name, tree, pretty))
 
-  private def code(s: String): String = s"`$s`"
-
   @tailrec private def dealiasType(t: Type): Type = t.dealias match {
     case x if x == t => x
     case x => dealiasType(x)
@@ -81,10 +45,6 @@ class DisableToStringPlugin(override val global: Global) extends Plugin { self =
 
   private def normalizeType(tpe: Type): Type =
     Option(tpe).fold[Type](NoType)(t => widenType(dealiasType(t)))
-
-  private lazy val catsShow = "cats.Show"
-  private lazy val scalaz = "scalaz"
-  private lazy val scalazShow = s"$scalaz.Show"
 
   private lazy val STRING_TPE: Type = global.typeOf[String]
   private lazy val STRING_TPES: Set[Type] =
