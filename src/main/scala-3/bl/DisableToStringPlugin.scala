@@ -126,7 +126,7 @@ class DisableToStringPlugin extends StandardPlugin with BaseDisableToStringPlugi
             super.transformTree(t, start)
 
           // Disallow string concatenation of disabled types
-          case t @ Apply(Select(lhs @ StringOrShownType(_), plus @ TermName("+" | "$plus")), rhss) =>
+          case t @ Apply(Select(lhs @ StringOrShownType(_), TermName("+" | "$plus")), rhss) =>
             rhss.collect {
               case t @ DisabledType(tpe) =>
                 report.warning(
