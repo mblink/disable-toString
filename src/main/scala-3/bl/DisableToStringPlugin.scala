@@ -122,9 +122,7 @@ class DisableToStringPlugin extends StandardPlugin with BaseDisableToStringPlugi
           case t @ Select(DisabledType(tpe), TermName("toString")) =>
             report.warning(
               s"Use a ${code("cats.Show")} instance instead of ${code(s"${tpe.show}.toString")}",
-              t/*,
-              WarningCategory.Other,
-              ""*/)
+              t)
             super.transformTree(t, start)
 
           // Disallow string concatenation of disabled types
@@ -134,9 +132,7 @@ class DisableToStringPlugin extends StandardPlugin with BaseDisableToStringPlugi
                 report.warning(
                   s"Only strings can be concatenated. Consider defining a ${code(s"$catsShow[${tpe.show}]")} " ++
                     s"and using ${code("""show"..."""")} from ${code("cats.syntax.show._")}",
-                  t/*,
-                  WarningCategory.Other,
-                  ""*/)
+                  t)
             }
 
             super.transformTree(t, start)
@@ -147,9 +143,7 @@ class DisableToStringPlugin extends StandardPlugin with BaseDisableToStringPlugi
               s"Use ${code(s"cats.Foldable[${iterableType.show}].mkString_")} instead of " ++
                 s"${code(s"${iterableType.show}[${typeArg.show}].mkString")}\n" ++
                 s"or convert elements to ${code("String")}s before calling ${code("mkString")}",
-              t/*,
-              WarningCategory.Other,
-              ""*/)
+              t)
 
             super.transformTree(t, start)
 
