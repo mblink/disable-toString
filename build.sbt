@@ -63,6 +63,7 @@ lazy val testLiteralOption = project.in(file("test-literal-option"))
       "-P:disableToString:literal=scala.Int",
       "-P:disableToString:literal=bl.Foo",
       "-P:disableToString:literal=bl.Bar",
+      "-P:disableToString:literal=bl.testObj.Baz",
     )
   )
   .aggregate(disableToStringPlugin)
@@ -70,7 +71,7 @@ lazy val testLiteralOption = project.in(file("test-literal-option"))
 lazy val testRegexOption = project.in(file("test-regex-option"))
   .settings(testSettings)
   .settings(
-    scalacOptions += "-P:disableToString:regex=^(scala\\.Boolean|scala\\.Int|bl\\.(Foo|Bar))$",
+    scalacOptions += "-P:disableToString:regex=^(scala\\.Boolean|scala\\.Int|bl\\.(Foo|Bar|testObj\\.Baz))$",
   )
   .aggregate(disableToStringPlugin)
 

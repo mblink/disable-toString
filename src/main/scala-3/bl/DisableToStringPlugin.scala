@@ -79,7 +79,7 @@ class DisableToStringPlugin extends StandardPlugin with BaseDisableToStringPlugi
   private object DisabledType {
     def unapply(tpe: Type)(using Context): Option[Type] = {
       val (stringOrShown, trueType) = isStringOrShown(tpe)
-      val tpeName = trueType.typeSymbol.fullName.toString
+      val tpeName = trueType.typeSymbol.fullName.toString.replace("$.", ".")
       if (!stringOrShown && configuredTypes.exists(_.findFirstIn(tpeName).nonEmpty)) Some(trueType) else None
     }
 
