@@ -12,7 +12,7 @@ val baseSettings = Seq(
   crossScalaVersions := scalaVersions,
   scalaVersion := scalaVersions.find(_.startsWith("3.")).get,
   organization := "bondlink",
-  version := "0.2.0",
+  version := "0.2.1",
   gitPublishDir := file("/src/maven-repo"),
 )
 
