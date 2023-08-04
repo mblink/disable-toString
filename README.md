@@ -1,8 +1,8 @@
 # Disable `toString` plugin
 
-This is a Scala 2 compiler plugin to trigger compiler warnings (which can be turned into errors with `-Xfatal-warnings`),
-when certain types are converted to `String`s via global methods like `.toString`, string interpolation, and calls to
-`mkString` on iterables of that type.
+This is a Scala 2 and 3 compiler plugin to trigger compiler warnings (which can be turned into errors with
+`-Xfatal-warnings`), when certain types are converted to `String`s via global methods like `.toString`, string
+interpolation, and calls to `mkString` on iterables of that type.
 
 ## Install
 
