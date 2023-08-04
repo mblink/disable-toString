@@ -27,7 +27,7 @@ private[bl] trait BaseDisableToStringPlugin { self =>
   protected final def parseOpts(opts: List[String], error: String => Unit): Unit =
     opts.foreach(opt => opt.split(':').toList match {
       case "all" :: Nil => self.synchronized { configuredTypes = configuredTypes + ".*".r }
-      case s"literal=$s" :: Nil => self.synchronized { configuredTypes = configuredTypes + ("\\Q" ++ s ++ "\\E").r }
+      case s"literal=$s" :: Nil => self.synchronized { configuredTypes = configuredTypes + ("^\\Q" ++ s ++ "\\E$").r }
       case s"regex=$s" :: Nil => self.synchronized { configuredTypes = configuredTypes + s.r }
       case _ => error(s"disableToString: invalid option `$opt`")
     })

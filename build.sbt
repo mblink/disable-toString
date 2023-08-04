@@ -59,8 +59,8 @@ lazy val testLiteralOption = project.in(file("test-literal-option"))
   .settings(testSettings)
   .settings(
     scalacOptions ++= Seq(
-      "-P:disableToString:literal=Boolean",
-      "-P:disableToString:literal=Int",
+      "-P:disableToString:literal=scala.Boolean",
+      "-P:disableToString:literal=scala.Int",
       "-P:disableToString:literal=bl.Foo",
       "-P:disableToString:literal=bl.Bar",
     )
