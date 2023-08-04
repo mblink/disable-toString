@@ -21,9 +21,9 @@ lazy val disableToStringPlugin = project.in(file("."))
   .settings(
     name := "disable-to-string-plugin",
     libraryDependencies += foldScalaV(scalaVersion.value)(
-      "org.scala-lang" % "scala-compiler" % scalaVersion.value % "provided",
-      "org.scala-lang" %% "scala3-compiler" % scalaVersion.value % "provided",
-    ),
+      "org.scala-lang" % "scala-compiler",
+      "org.scala-lang" %% "scala3-compiler",
+    ) % scalaVersion.value % "provided",
   )
 
 val testSettingsNoSrc = baseSettings ++ Seq(
