@@ -21,7 +21,7 @@ To configure which types trigger warnings, pass additional flags to `scalac`. Av
 |--------|----------|
 |`-P:disableToString:all`|Disable string conversions on all types|
 |`-P:disableToString:literal=com.example.Type`|Disable string conversions for a type named exactly `com.example.Type`|
-|`-PdisableToString:regex=com\\.example\\.(Example)?Type`|Disable string conversions for types matching the given regex|
+|`-P:disableToString:regex=com\\.example\\.(Example)?Type`|Disable string conversions for types matching the given regex|
 
 You can add these in SBT with
 

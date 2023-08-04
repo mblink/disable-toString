@@ -26,29 +26,54 @@ lazy val disableToStringPlugin = project.in(file("."))
     ),
   )
 
-lazy val tests = project.in(file("tests"))
-  .settings(baseSettings)
+val testSettingsNoSrc = baseSettings ++ Seq(
+  publish := {},
+  publishLocal := {},
+  gitRelease := {},
+  scalacOptions ++= {
+    val jar = (disableToStringPlugin / Compile / Keys.`package`).value
+    Seq(
+      s"-Xplugin:${jar.getAbsolutePath}",
+      s"-Jdummy$name=${jar.lastModified}",
+    )
+  },
+  libraryDependencies ++= Seq(
+    "org.scalaz" %% "scalaz-core" % "7.3.7",
+    "org.typelevel" %% "cats-core" % "2.9.0",
+  ),
+  resolvers += "bondlink-maven-repo" at "https://raw.githubusercontent.com/mblink/maven-repo/main",
+)
+
+val testSettings = testSettingsNoSrc ++ Seq(
+  Compile / unmanagedSourceDirectories += (ThisBuild / baseDirectory).value / "tests" / "src" / "main" / "scala",
+)
+
+lazy val testAllOption = project.in(file("test-all-option"))
+  .settings(testSettings)
   .settings(
-    publish := {},
-    publishLocal := {},
-    gitRelease := {},
-    scalacOptions ++= {
-      val jar = (disableToStringPlugin / Compile / Keys.`package`).value
-      Seq(
-        s"-Xplugin:${jar.getAbsolutePath}",
-        s"-Jdummy$name=${jar.lastModified}",
-      )
-    },
-    libraryDependencies ++= Seq(
-      "org.scalaz" %% "scalaz-core" % "7.3.7",
-      "org.typelevel" %% "cats-core" % "2.9.0",
-    ),
-    resolvers += "bondlink-maven-repo" at "https://raw.githubusercontent.com/mblink/maven-repo/main",
-    // addCompilerPlugin("bondlink" %% "nowarn-plugin" % "1.0.0"),
+    scalacOptions += "-P:disableToString:all",
+  )
+  .aggregate(disableToStringPlugin)
+
+lazy val testLiteralOption = project.in(file("test-literal-option"))
+  .settings(testSettings)
+  .settings(
     scalacOptions ++= Seq(
-      "-P:disableToString:all",
-      // "-P:nowarn:toStringOk:msg=Use a `cats.Show` instance instead of `.*\\.toString`",
-      // "-P:nowarn:strConcatOk:msg=Only strings can be concatenated. Consider defining a `cats.Show"
+      "-P:disableToString:literal=Boolean",
+      "-P:disableToString:literal=Int",
+      "-P:disableToString:literal=bl.Foo",
+      "-P:disableToString:literal=bl.Bar",
     )
   )
   .aggregate(disableToStringPlugin)
+
+lazy val testRegexOption = project.in(file("test-regex-option"))
+  .settings(testSettings)
+  .settings(
+    scalacOptions += "-P:disableToString:regex=^(scala\\.Boolean|scala\\.Int|bl\\.(Foo|Bar))$",
+  )
+  .aggregate(disableToStringPlugin)
+
+lazy val tests = project.in(file("all-tests"))
+  .settings(testSettingsNoSrc)
+  .aggregate(testAllOption, testLiteralOption, testRegexOption)

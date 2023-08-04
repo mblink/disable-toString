@@ -1,3 +1,5 @@
+package bl
+
 import cats.syntax.show._
 
 case class Foo(s: String)
@@ -63,7 +65,7 @@ object DisableToString {
 
   val intVal = 1
   def intDef() = 1
-  // val interpIntLit = s"a ${1: @strConcatOk} b"
+  val interpIntLit = s"a ${1: @annotation.nowarn("msg=Consider defining a `cats.Show\\[Int")} b"
   val interpIntVal = s"a ${intVal: @annotation.nowarn("msg=Consider defining a `cats.Show\\[Int")} b"
   val interpIntDef = s"a ${intDef(): @annotation.nowarn("msg=Consider defining a `cats.Show\\[Int")} b"
 
@@ -75,17 +77,17 @@ object DisableToString {
 
   val fooVal = Foo("foo")
   def fooDef() = Foo("bar")
-  val interpFooLit = s"a ${Foo("baz"): @annotation.nowarn("msg=Consider defining a `cats.Show\\[Foo")} b"
-  val interpFooVal = s"a ${fooVal: @annotation.nowarn("msg=Consider defining a `cats.Show\\[Foo")} b"
-  val interpFooDef = s"a ${fooDef(): @annotation.nowarn("msg=Consider defining a `cats.Show\\[Foo")} b"
+  val interpFooLit = s"a ${Foo("baz"): @annotation.nowarn("msg=Consider defining a `cats.Show\\[bl.Foo")} b"
+  val interpFooVal = s"a ${fooVal: @annotation.nowarn("msg=Consider defining a `cats.Show\\[bl.Foo")} b"
+  val interpFooDef = s"a ${fooDef(): @annotation.nowarn("msg=Consider defining a `cats.Show\\[bl.Foo")} b"
   val interpFooValMember = s"a ${fooVal.s} b"
   val interpFooDefMember = s"a ${fooDef().s} b"
 
   val barVal = Bar(1)
   def barDef() = Bar(2)
-  val interpBarLit = s"a ${Bar(3): @annotation.nowarn("msg=Consider defining a `cats.Show\\[Bar")} b"
-  val interpBarVal = s"a ${barVal: @annotation.nowarn("msg=Consider defining a `cats.Show\\[Bar")} b"
-  val interpBarDef = s"a ${barDef(): @annotation.nowarn("msg=Consider defining a `cats.Show\\[Bar")} b"
+  val interpBarLit = s"a ${Bar(3): @annotation.nowarn("msg=Consider defining a `cats.Show\\[bl.Bar")} b"
+  val interpBarVal = s"a ${barVal: @annotation.nowarn("msg=Consider defining a `cats.Show\\[bl.Bar")} b"
+  val interpBarDef = s"a ${barDef(): @annotation.nowarn("msg=Consider defining a `cats.Show\\[bl.Bar")} b"
   val interpBarValMember = s"a ${barVal.i: @annotation.nowarn("msg=Consider defining a `cats.Show\\[Int")} b"
   val interpBarDefMember = s"a ${barDef().i: @annotation.nowarn("msg=Consider defining a `cats.Show\\[Int")} b"
   val showInterpBarLit = show"a ${Bar(3)} b"
@@ -96,21 +98,20 @@ object DisableToString {
   val stringLitValPlusIntDef = "1" + (intDef(): @annotation.nowarn("msg=Consider defining a `cats.Show\\[Int"))
   val stringLitValPlusBoolVal = "1" + (boolVal: @annotation.nowarn("msg=Consider defining a `cats.Show\\[Boolean"))
   val stringLitValPlusBoolDef = "1" + (boolDef(): @annotation.nowarn("msg=Consider defining a `cats.Show\\[Boolean"))
-  val stringLitValPlusFooVal = "1" + (fooVal: @annotation.nowarn("msg=Consider defining a `cats.Show\\[Foo"))
-  val stringLitValPlusFooDef = "1" + (fooDef(): @annotation.nowarn("msg=Consider defining a `cats.Show\\[Foo"))
-  val stringLitValPlusBarVal = "1" + (barVal: @annotation.nowarn("msg=Consider defining a `cats.Show\\[Bar"))
-  val stringLitValPlusBarDef = "1" + (barDef(): @annotation.nowarn("msg=Consider defining a `cats.Show\\[Bar"))
+  val stringLitValPlusFooVal = "1" + (fooVal: @annotation.nowarn("msg=Consider defining a `cats.Show\\[bl.Foo"))
+  val stringLitValPlusFooDef = "1" + (fooDef(): @annotation.nowarn("msg=Consider defining a `cats.Show\\[bl.Foo"))
+  val stringLitValPlusBarVal = "1" + (barVal: @annotation.nowarn("msg=Consider defining a `cats.Show\\[bl.Bar"))
+  val stringLitValPlusBarDef = "1" + (barDef(): @annotation.nowarn("msg=Consider defining a `cats.Show\\[bl.Bar"))
 
   def stringLitDefPlusIntVal() = "1" + (intVal: @annotation.nowarn("msg=Consider defining a `cats.Show\\[Int"))
   def stringLitDefPlusIntDef() = "1" + (intDef(): @annotation.nowarn("msg=Consider defining a `cats.Show\\[Int"))
   def stringLitDefPlusBoolVal() = "1" + (boolVal: @annotation.nowarn("msg=Consider defining a `cats.Show\\[Boolean"))
   def stringLitDefPlusBoolDef() = "1" + (boolDef(): @annotation.nowarn("msg=Consider defining a `cats.Show\\[Boolean"))
-  def stringLitDefPlusFooVal() = "1" + (fooVal: @annotation.nowarn("msg=Consider defining a `cats.Show\\[Foo"))
-  def stringLitDefPlusFooDef() = "1" + (fooDef(): @annotation.nowarn("msg=Consider defining a `cats.Show\\[Foo"))
-  def stringLitDefPlusBarVal() = "1" + (barVal: @annotation.nowarn("msg=Consider defining a `cats.Show\\[Bar"))
-  def stringLitDefPlusBarDef() = "1" + (barDef(): @annotation.nowarn("msg=Consider defining a `cats.Show\\[Bar"))
+  def stringLitDefPlusFooVal() = "1" + (fooVal: @annotation.nowarn("msg=Consider defining a `cats.Show\\[bl.Foo"))
+  def stringLitDefPlusFooDef() = "1" + (fooDef(): @annotation.nowarn("msg=Consider defining a `cats.Show\\[bl.Foo"))
+  def stringLitDefPlusBarVal() = "1" + (barVal: @annotation.nowarn("msg=Consider defining a `cats.Show\\[bl.Bar"))
+  def stringLitDefPlusBarDef() = "1" + (barDef(): @annotation.nowarn("msg=Consider defining a `cats.Show\\[bl.Bar"))
 
-  @annotation.nowarn("msg=Consider defining a `cats.Show\\[S") def badSingleton[S <: Singleton](s: S) = s"a $s b"
   def goodSingleton[S <: Singleton with String](s: S) = s"a $s b"
 
   val cordToString = scalaz.Cord("foo").toString
