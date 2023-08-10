@@ -17,7 +17,7 @@ class DisableToStringPlugin extends StandardPlugin with BaseDisableToStringPlugi
 
   override def init(opts: List[String]): List[PluginPhase] = {
     parseOpts(opts, System.err.println(_))
-    List(phase)
+    List(Phase())
   }
 
   @tailrec private def dealiasType(t: Type)(using Context): Type = t.dealias match {
@@ -112,7 +112,7 @@ class DisableToStringPlugin extends StandardPlugin with BaseDisableToStringPlugi
       Some(name).collect { case n: TermName => n.toString }
   }
 
-  private object phase extends PluginPhase {
+  private class Phase extends PluginPhase {
     val phaseName = self.name
     override val runsAfter = Set("interpolators")
 
