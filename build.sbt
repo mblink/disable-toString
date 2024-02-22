@@ -1,6 +1,21 @@
 Global / onChangedBuildSource := ReloadOnSourceChanges
 
-val scalaVersions = Seq("2.13.11", "3.3.0")
+val scalaVersions = Seq("2.13.12", "3.3.1")
+
+ThisBuild / crossScalaVersions := scalaVersions
+
+// GitHub Actions config
+val javaVersions = Seq(8, 11, 17, 21).map(v => JavaSpec.temurin(v.toString))
+
+ThisBuild / githubWorkflowJavaVersions := javaVersions
+ThisBuild / githubWorkflowArtifactUpload := false
+ThisBuild / githubWorkflowBuildMatrixFailFast := Some(false)
+ThisBuild / githubWorkflowTargetBranches := Seq("main")
+ThisBuild / githubWorkflowPublishTargetBranches := Seq()
+
+ThisBuild / githubWorkflowBuild := Seq(
+  WorkflowStep.Sbt(List("tests/compile"), name = Some("test")),
+)
 
 def foldScalaV[A](scalaVersion: String)(_2: => A, _3: => A): A =
   CrossVersion.partialVersion(scalaVersion) match {
@@ -38,8 +53,8 @@ val testSettingsNoSrc = baseSettings ++ Seq(
     )
   },
   libraryDependencies ++= Seq(
-    "org.scalaz" %% "scalaz-core" % "7.3.7",
-    "org.typelevel" %% "cats-core" % "2.9.0",
+    "org.scalaz" %% "scalaz-core" % "7.3.8",
+    "org.typelevel" %% "cats-core" % "2.10.0",
   ),
   resolvers += "bondlink-maven-repo" at "https://raw.githubusercontent.com/mblink/maven-repo/main",
 )
