@@ -1,6 +1,6 @@
 Global / onChangedBuildSource := ReloadOnSourceChanges
 
-val scalaVersions = Seq("2.13.12", "3.3.1")
+val scalaVersions = Seq("2.13.13", "3.3.3")
 
 ThisBuild / crossScalaVersions := scalaVersions
 
