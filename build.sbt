@@ -1,6 +1,6 @@
 Global / onChangedBuildSource := ReloadOnSourceChanges
 
-val scalaVersions = Seq("2.13.13", "3.3.3")
+val scalaVersions = Seq("2.13.15", "3.3.4")
 
 ThisBuild / crossScalaVersions := scalaVersions
 
@@ -54,7 +54,7 @@ val testSettingsNoSrc = baseSettings ++ Seq(
   },
   libraryDependencies ++= Seq(
     "org.scalaz" %% "scalaz-core" % "7.3.8",
-    "org.typelevel" %% "cats-core" % "2.10.0",
+    "org.typelevel" %% "cats-core" % "2.12.0",
   ),
   resolvers += "bondlink-maven-repo" at "https://raw.githubusercontent.com/mblink/maven-repo/main",
 )

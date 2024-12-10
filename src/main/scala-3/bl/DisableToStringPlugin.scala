@@ -127,12 +127,14 @@ class DisableToStringPlugin extends StandardPlugin with BaseDisableToStringPlugi
 
           // Disallow string concatenation of disabled types
           case t @ Apply(Select(lhs @ StringOrShownType(_), TermName("+" | "$plus")), rhss) =>
-            rhss.collect {
+            rhss.foreach {
               case t @ DisabledType(tpe) =>
                 report.warning(
                   s"Only strings can be concatenated. Consider defining a ${code(s"$catsShow[${tpe.show}]")} " ++
                     s"and using ${code("""show"..."""")} from ${code("cats.syntax.show._")}",
                   t)
+
+              case _ => ()
             }
 
             super.transformTree(t, start)
