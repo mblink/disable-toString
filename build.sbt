@@ -28,7 +28,7 @@ val baseSettings = Seq(
   scalaVersion := scalaVersions.find(_.startsWith("3.")).get,
   organization := "bondlink",
   version := "0.2.2",
-  gitPublishDir := file("/src/maven-repo"),
+  publishTo := Some("GitHub Package Registry".at("https://maven.pkg.github.com/mblink/disable-toString")),
 )
 
 lazy val disableToStringPlugin = project.in(file("."))
@@ -44,7 +44,6 @@ lazy val disableToStringPlugin = project.in(file("."))
 val testSettingsNoSrc = baseSettings ++ Seq(
   publish := {},
   publishLocal := {},
-  gitRelease := {},
   scalacOptions ++= {
     val jar = (disableToStringPlugin / Compile / Keys.`package`).value
     Seq(

@@ -9,7 +9,7 @@ interpolation, and calls to `mkString` on iterables of that type.
 Add the resolver and compiler plugin dependency to your `build.sbt`:
 
 ```scala
-resolvers += "bondlink-maven-repo" at "https://raw.githubusercontent.com/mblink/maven-repo/main"
+resolvers += "GitHub Packages (disable-toString)" at "https://maven.pkg.github.com/mblink/disable-toString"
 addCompilerPlugin("bondlink" %% "disable-to-string-plugin" % "0.2.2")
 ```
 
