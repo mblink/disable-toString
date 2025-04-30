@@ -28,7 +28,7 @@ val baseSettings = Seq(
   scalaVersion := scalaVersions.find(_.startsWith("3.")).get,
   organization := "bondlink",
   version := "0.2.2",
-  publishTo := Some("GitHub Package Registry".at("https://maven.pkg.github.com/mblink/disable-toString")),
+  publishTo := Some("BondLink S3".at("s3://bondlink-maven-repo")),
 )
 
 lazy val disableToStringPlugin = project.in(file("."))
