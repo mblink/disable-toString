@@ -55,7 +55,7 @@ val testSettingsNoSrc = baseSettings ++ Seq(
     "org.scalaz" %% "scalaz-core" % "7.3.8",
     "org.typelevel" %% "cats-core" % "2.12.0",
   ),
-  resolvers += "bondlink-maven-repo" at "https://raw.githubusercontent.com/mblink/maven-repo/main",
+  resolvers += "bondlink-maven-repo" at "https://s3.amazonaws.com/bondlink-maven-repo",
 )
 
 val testSettings = testSettingsNoSrc ++ Seq(
