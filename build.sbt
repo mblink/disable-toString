@@ -31,7 +31,7 @@ val baseSettings = Seq(
   publishTo := Some("BondLink S3".at("s3://bondlink-maven-repo")),
 )
 
-lazy val disableToStringPlugin = project.in(file("."))
+lazy val disableToStringPlugin = project.in(file("plugin"))
   .settings(baseSettings)
   .settings(
     name := "disable-to-string-plugin",
