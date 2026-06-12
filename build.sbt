@@ -62,7 +62,7 @@ val testSettings = baseSettings ++ Seq(
     }
   }.value,
   libraryDependencies ++= Seq(
-    "org.scalaz" %% "scalaz-core" % "7.3.8",
+    "org.scalaz" %% "scalaz-core" % "7.3.9",
     "org.typelevel" %% "cats-core" % "2.13.0",
   ),
   resolvers += "bondlink-maven-repo" at "https://maven.bondlink-cdn.com",
