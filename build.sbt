@@ -6,13 +6,14 @@ val scala3 = "3.3.8"
 ThisBuild / scalaVersion := scala3
 
 // GitHub Actions config
-val javaVersions = Seq(8, 11, 17, 21, 25).map(v => JavaSpec.temurin(v.toString))
+val javaVersions = Seq(17, 21, 25).map(v => JavaSpec.temurin(v.toString))
 
 ThisBuild / githubWorkflowJavaVersions := javaVersions
 ThisBuild / githubWorkflowArtifactUpload := false
 ThisBuild / githubWorkflowBuildMatrixFailFast := Some(false)
 ThisBuild / githubWorkflowTargetBranches := Seq("main")
 ThisBuild / githubWorkflowPublishTargetBranches := Seq()
+ThisBuild / githubWorkflowUseSbtThinClient := true
 
 ThisBuild / githubWorkflowBuild := Seq(
   WorkflowStep.Run(List("sbt Test/compile"), name = Some("test")),
@@ -37,12 +38,12 @@ val publishSettings = Seq(
   s3PublishBucket := "bondlink-maven-repo",
 )
 
-def baseProj(id: String, nme: String) =
-  sbt.internal.ProjectMatrix(id, file(id))
+def baseProj(matrix: ProjectMatrix, nme: String) =
+  matrix
     .jvmPlatform(scalaVersions = Seq(scala2, scala3))
     .settings(baseSettings ++ Seq(name := nme))
 
-lazy val disableToStringPlugin = baseProj("plugin", "disable-to-string-plugin")
+lazy val disableToStringPlugin = baseProj(projectMatrix.in(file("plugin")), "disable-to-string-plugin")
   .settings(publishSettings ++ Seq(
     libraryDependencies += foldScalaV(scalaVersion.value)(
       "org.scala-lang" % "scala-compiler",
@@ -52,9 +53,10 @@ lazy val disableToStringPlugin = baseProj("plugin", "disable-to-string-plugin")
 
 val testSettings = baseSettings ++ Seq(
   scalacOptions ++= Def.taskDyn {
+    val conv = fileConverter.value
     val scalaV = scalaVersion.value
     Def.task {
-      val jar = (disableToStringPlugin.jvm(scalaV) / Compile / Keys.`package`).value
+      val jar = conv.toPath((disableToStringPlugin.jvm(scalaV) / Compile / Keys.`package`).value).toFile
       Seq(
         s"-Xplugin:${jar.getAbsolutePath}",
         s"-Jdummy$name=${jar.lastModified}",
@@ -69,14 +71,14 @@ val testSettings = baseSettings ++ Seq(
   Compile / unmanagedSourceDirectories += (ThisBuild / baseDirectory).value / "tests" / "src" / "main" / "scala",
 )
 
-lazy val testAllOption = baseProj("test-all-option", "test-all-option")
+lazy val testAllOption = baseProj(projectMatrix.in(file("test-all-option")), "test-all-option")
   .settings(testSettings)
   .settings(
     scalacOptions += "-P:disableToString:all",
   )
   .aggregate(disableToStringPlugin)
 
-lazy val testLiteralOption = baseProj("test-literal-option", "test-literal-option")
+lazy val testLiteralOption = baseProj(projectMatrix.in(file("test-literal-option")), "test-literal-option")
   .settings(testSettings)
   .settings(
     scalacOptions ++= Seq(
@@ -89,7 +91,7 @@ lazy val testLiteralOption = baseProj("test-literal-option", "test-literal-optio
   )
   .aggregate(disableToStringPlugin)
 
-lazy val testRegexOption = baseProj("test-regex-option", "test-regex-option")
+lazy val testRegexOption = baseProj(projectMatrix.in(file("test-regex-option")), "test-regex-option")
   .settings(testSettings)
   .settings(
     scalacOptions += "-P:disableToString:regex=^(scala\\.Boolean|scala\\.Int|bl\\.(Foo|Bar|testObj\\.Baz))$",
