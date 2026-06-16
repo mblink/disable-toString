@@ -13,6 +13,7 @@ ThisBuild / githubWorkflowArtifactUpload := false
 ThisBuild / githubWorkflowBuildMatrixFailFast := Some(false)
 ThisBuild / githubWorkflowTargetBranches := Seq("main")
 ThisBuild / githubWorkflowPublishTargetBranches := Seq()
+ThisBuild / githubWorkflowUseSbtThinClient := true
 
 ThisBuild / githubWorkflowBuild := Seq(
   WorkflowStep.Run(List("sbt Test/compile"), name = Some("test")),
