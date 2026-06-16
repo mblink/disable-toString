@@ -52,9 +52,10 @@ lazy val disableToStringPlugin = baseProj(projectMatrix.in(file("plugin")), "dis
 
 val testSettings = baseSettings ++ Seq(
   scalacOptions ++= Def.taskDyn {
+    val conv = fileConverter.value
     val scalaV = scalaVersion.value
     Def.task {
-      val jar = (disableToStringPlugin.jvm(scalaV) / Compile / Keys.`package`).value
+      val jar = conv.toPath((disableToStringPlugin.jvm(scalaV) / Compile / Keys.`package`).value).toFile
       Seq(
         s"-Xplugin:${jar.getAbsolutePath}",
         s"-Jdummy$name=${jar.lastModified}",
